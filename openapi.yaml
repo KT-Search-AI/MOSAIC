@@ -1,0 +1,163 @@
+openapi: 3.1.0
+info:
+  title: MOSAIC GraphRAG Public API
+  description: |
+    Public REST API for MOSAIC: retrieval-augmented question answering over
+    pre-built knowledge graphs (GraphRAG-Bench medical / novel corpora).
+
+    All `/api/mosaic/*` routes require the session cookie issued by
+    `/api/mosaic/login`. Responses use the envelope
+    `{"code": 0, "message": "ok", "payload": {...}}`; a non-zero `code`
+    indicates an application error.
+  version: 0.1.0
+servers:
+  # TODO: replace with the real public endpoint once it is deployed.
+  - url: https://api.mosaic.example.com
+    description: Public endpoint
+paths:
+  /api/version:
+    get:
+      summary: Service version / health check (no auth)
+      operationId: version
+      responses:
+        '200':
+          description: Service version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version: {type: string, example: 0.1.0}
+  /api/mosaic/login:
+    post:
+      summary: Issue the API session cookie
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: >-
+            On success `code` is 0 and a session cookie is set via
+            `Set-Cookie`. Bad credentials return a non-zero `code`.
+          headers:
+            Set-Cookie:
+              schema: {type: string}
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      payload:
+                        type: object
+                        properties:
+                          username: {type: string}
+                          expires_at: {type: string, format: date-time}
+  /api/mosaic/answer:
+    post:
+      summary: Graph retrieval + evidence-grounded answer generation
+      operationId: answer
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerRequest'
+      responses:
+        '200':
+          description: Answer with retrieved evidence
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                  - type: object
+                    properties:
+                      payload:
+                        $ref: '#/components/schemas/AnswerPayload'
+        '401':
+          description: Missing or expired session cookie (client re-logs in once)
+        '422':
+          description: Request validation error
+        '429':
+          description: Rate limited (client retries with backoff)
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: mosaic_session
+  schemas:
+    Envelope:
+      type: object
+      required: [code]
+      properties:
+        code: {type: integer, description: '0 on success'}
+        message: {type: string}
+        payload: {type: object}
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: {type: string}
+        password: {type: string}
+    AnswerRequest:
+      type: object
+      required: [database, question]
+      properties:
+        database:
+          type: string
+          description: Knowledge base to query (`medical`, `novel`)
+        question:
+          type: string
+        domain:
+          type: string
+          enum: [medical, novel, generic]
+          default: medical
+        question_type:
+          type: string
+          enum: [Fact Retrieval, Complex Reasoning, Contextual Summarize, Creative Generation]
+          default: Fact Retrieval
+        top_k:
+          type: integer
+          minimum: 1
+          default: 10
+        query_id:
+          type: [string, 'null']
+          description: Optional caller-side id, echoed back in `answering.query_id`
+    RetrievedDocument:
+      type: object
+      required: [uid, rank, score, content]
+      properties:
+        uid: {type: string, description: Document / passage id in the source corpus}
+        rank: {type: integer, description: 1-based rank}
+        score: {type: number}
+        content: {type: string}
+    AnswerPayload:
+      type: object
+      required: [answer, retrieval]
+      properties:
+        answer: {type: string}
+        retrieval:
+          type: object
+          required: [documents]
+          properties:
+            backend: {type: string, example: mosaic}
+            documents:
+              type: array
+              items:
+                $ref: '#/components/schemas/RetrievedDocument'
+        answering:
+          type: object
+          properties:
+            domain: {type: string}
+            question_type: {type: string}
+            query_id: {type: [string, 'null']}
+            model: {type: string, description: LLM used for generation}
