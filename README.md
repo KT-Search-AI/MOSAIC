@@ -4,6 +4,9 @@ Public REST API access to **MOSAIC** — KT's graph-based retrieval-augmented
 generation system, evaluated on
 [GraphRAG-Bench](https://arxiv.org/abs/2506.05690) (medical / novel corpora).
 
+- **Technical report**: [MOSAIC: Query-Aware Exploration Policy Adaptation for
+  GraphRAG](https://arxiv.org/abs/2609.11065) (arXiv:2609.11065)
+- **Release date**: 2026-09-10
 - **Endpoint**: `https://app-d40d64a2.proxy1.ainexus.ktcloud.com`
 - **OpenAPI spec**: [`openapi.yaml`](openapi.yaml) · interactive docs at
   [`/docs`](https://app-d40d64a2.proxy1.ainexus.ktcloud.com/docs)
@@ -14,6 +17,20 @@ The API exposes the **exact retrieval + answering pipeline used for the
 benchmark submission** against pre-built knowledge bases. No scoring endpoints
 are provided — evaluation should be performed with the official
 GraphRAG-Bench scripts (separation of player and referee).
+
+## Evaluation setup
+
+| | |
+|---|---|
+| Generation model | `gpt-4o-mini`, temperature 0 |
+| Evaluation judge | `gpt-4o-mini`, temperature 0 |
+| Embedding model (evaluation) | `BAAI/bge-large-en-v1.5` |
+| Questions | all questions of both subsets: Medical 2,062 / Novel 2,010 |
+
+Metrics per question type follow GraphRAG-Bench: ROUGE-L and answer
+correctness (Fact Retrieval, Complex Reasoning), answer correctness and
+coverage (Contextual Summarize), and answer correctness, coverage and
+faithfulness (Creative Generation).
 
 ## Pre-built knowledge bases
 
@@ -150,3 +167,15 @@ python -m unittest discover -s tests -v
 
 The tests run against a local mock server implementing `openapi.yaml`, so
 they need no network access.
+
+## Citation
+
+```bibtex
+@article{lee2026mosaic,
+  title   = {MOSAIC: Query-Aware Exploration Policy Adaptation for GraphRAG},
+  author  = {Lee, EunKyeong and Oh, Kyeong-Jin and Kim, Jinwon and Lee, Hye Woo and
+             Song, Minsang and Jang, Hyeongjun and Youn, Junyoung},
+  journal = {arXiv preprint arXiv:2609.11065},
+  year    = {2026}
+}
+```
