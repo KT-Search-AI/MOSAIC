@@ -9,10 +9,11 @@ Two modes:
      (Datasets/Questions/medical_questions.json or novel_questions.json):
          python reproduce_benchmark.py medical_questions.json --out results.jsonl
 
-Each answer call returns both the generated answer and the retrieved
-documents (the passages the answer was grounded on), so retrieval-only or
-end-to-end metrics can be computed from the same output file. Runs are
-resume-safe: ids already present in ``--out`` without an error are skipped.
+Each output line holds the generated answer and the retrieved documents (the
+passages the answer was grounded on). Convert the file with to_eval_format.py
+before scoring it with the official GraphRAG-Bench scripts. Runs are
+resume-safe: ids already answered successfully in ``--out`` are skipped and
+failed ones are retried.
 
 Uses the public endpoint and demo account by default; override with
 MOSAIC_BASE_URL / MOSAIC_USERNAME / MOSAIC_PASSWORD.

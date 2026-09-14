@@ -139,20 +139,56 @@ folder, or point Python at the certifi bundle:
 
 ## Reproduce a benchmark run
 
-```bash
-# built-in 4-question sample (one per question type)
-python examples/reproduce_benchmark.py
+**1. Get the official question files** — `medical_questions.json` and
+`novel_questions.json` from
+[GraphRAG-Benchmark/Datasets/Questions](https://github.com/GraphRAG-Bench/GraphRAG-Benchmark/tree/main/Datasets/Questions).
 
-# full GraphRAG-Bench question file (from the official Datasets release)
-python examples/reproduce_benchmark.py medical_questions.json --out medical_answers.jsonl
+**2. Answer every question through the API**
+
+```bash
+cd python
+python examples/reproduce_benchmark.py   # 4-question smoke test (medical, one per question type)
+
+python examples/reproduce_benchmark.py medical_questions.json --out medical_answers.jsonl --concurrency 4
 python examples/reproduce_benchmark.py novel_questions.json --out novel_answers.jsonl --concurrency 4
 ```
 
-Output is JSONL with one row per question containing `answer` and
-`retrieved_documents`, consumable by retrieval-only (recall / context
-relevancy) and end-to-end (generation) evaluation alike. Runs are resume-safe:
-re-running skips ids that already succeeded and retries failed ones (when an
-id appears more than once, use its last non-error row).
+The knowledge base (`medical` / `novel`) is inferred from the file name. Each
+output line holds `id`, `question_type`, `question`, `answer` and
+`retrieved_documents` (the passages the answer was grounded on). With
+`--concurrency 4` a full subset takes roughly an hour. If some questions fail,
+run the same command again: questions that already succeeded are skipped and
+only the failed ones are retried.
+
+**3. Convert to the official evaluation input**
+
+```bash
+python examples/to_eval_format.py medical_answers.jsonl medical_questions.json --out medical_eval_input.json
+python examples/to_eval_format.py novel_answers.jsonl novel_questions.json --out novel_eval_input.json
+```
+
+This joins the answers with the question file (`ground_truth`, `evidence`) and
+writes the record format of GraphRAG-Benchmark's `Examples/run_*.py`: `id`,
+`question`, `source`, `question_type`, `context` (retrieved passage texts),
+`evidence`, `generated_answer`, `ground_truth`. It exits with an error if any
+question still has no successful answer.
+
+**4. Score with the official GraphRAG-Bench scripts** (from a
+[GraphRAG-Benchmark](https://github.com/GraphRAG-Bench/GraphRAG-Benchmark)
+checkout, with `LLM_API_KEY` set)
+
+```bash
+python -m Evaluation.generation_eval --mode API --model gpt-4o-mini \
+  --base_url https://api.openai.com/v1 --embedding_model BAAI/bge-large-en-v1.5 \
+  --data_file medical_eval_input.json --output_file medical_generation_scores.json
+
+python -m Evaluation.retrieval_eval --mode API --model gpt-4o-mini \
+  --base_url https://api.openai.com/v1 --embedding_model BAAI/bge-large-en-v1.5 \
+  --data_file medical_eval_input.json --output_file medical_retrieval_scores.json
+```
+
+Point `--data_file` at the files written in step 3, and repeat for
+`novel_eval_input.json`.
 
 ## curl
 
