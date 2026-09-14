@@ -52,14 +52,12 @@ All JSON responses (except `/api/version`) use the envelope
 | `question` | str | natural-language question |
 | `domain` | str | `medical` / `novel` / `generic` (default `medical`) |
 | `question_type` | str | `Fact Retrieval` / `Complex Reasoning` / `Contextual Summarize` / `Creative Generation` |
-| `top_k` | int, optional | **deprecated, ignored** — see below |
 | `query_id` | str, optional | caller-side id, echoed back |
 
-Every answer is produced with the benchmark-submission configuration.
-Retrieval breadth and depth are chosen per question by MOSAIC's query analyzer,
+Every answer is produced with the benchmark-submission configuration:
+retrieval breadth and depth are chosen per question by MOSAIC's query analyzer,
 and the answer is grounded on **15 source passages** reranked from the graph
-evidence. `top_k` is accepted only for backward compatibility; the value
-actually used is reported in `answering.top_k`.
+evidence. There is no caller-side retrieval-size knob.
 
 ### `answer` response payload
 
@@ -76,8 +74,7 @@ actually used is reported in `answering.top_k`.
     "domain": "medical",
     "question_type": "Fact Retrieval",
     "query_id": null,
-    "model": "gpt-4o-mini",
-    "top_k": 15
+    "model": "gpt-4o-mini"
   }
 }
 ```
