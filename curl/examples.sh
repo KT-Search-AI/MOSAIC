@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # MOSAIC API - curl examples
-#   MOSAIC_BASE_URL=https://app-d40d64a2.proxy1.ainexus.ktcloud.com MOSAIC_USERNAME=demo MOSAIC_PASSWORD=... ./examples.sh
+#   ./examples.sh      (public endpoint + demo account; override with MOSAIC_BASE_URL /
+#                       MOSAIC_USERNAME / MOSAIC_PASSWORD)
 set -euo pipefail
 
-BASE="${MOSAIC_BASE_URL:?set MOSAIC_BASE_URL}"
-USER="${MOSAIC_USERNAME:?set MOSAIC_USERNAME}"
-PASS="${MOSAIC_PASSWORD:?set MOSAIC_PASSWORD}"
+BASE="${MOSAIC_BASE_URL:-https://app-d40d64a2.proxy1.ainexus.ktcloud.com}"
+USER="${MOSAIC_USERNAME:-demo}"
+PASS="${MOSAIC_PASSWORD:-ktmosaic}"
 JAR=$(mktemp)
 trap 'rm -f "$JAR"' EXIT
 

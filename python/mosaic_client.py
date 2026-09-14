@@ -18,7 +18,8 @@ Usage:
 
 Connection settings can also come from the environment:
 ``MOSAIC_BASE_URL``, ``MOSAIC_USERNAME``, ``MOSAIC_PASSWORD``
-(see :meth:`MosaicClient.from_env`).
+(see :meth:`MosaicClient.from_env`); they default to the public endpoint
+and the public demo account.
 """
 
 from __future__ import annotations
@@ -37,11 +38,17 @@ __all__ = [
     "DOMAINS",
     "QUESTION_TYPES",
     "DEFAULT_BASE_URL",
+    "DEMO_USERNAME",
+    "DEMO_PASSWORD",
 ]
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 
 DEFAULT_BASE_URL = "https://app-d40d64a2.proxy1.ainexus.ktcloud.com"
+
+# Public demo account for benchmark verification.
+DEMO_USERNAME = "demo"
+DEMO_PASSWORD = "ktmosaic"
 
 API_PREFIX = "/api/mosaic"
 
@@ -107,16 +114,14 @@ class MosaicClient:
 
     @classmethod
     def from_env(cls, **kwargs: Any) -> "MosaicClient":
-        """Build a client from ``MOSAIC_*`` environment variables.
+        """Build a logged-in client from ``MOSAIC_*`` environment variables.
 
-        Logs in automatically when ``MOSAIC_USERNAME`` and ``MOSAIC_PASSWORD``
-        are both set.
+        Unset variables fall back to the public endpoint and the public demo
+        account (``DEMO_USERNAME`` / ``DEMO_PASSWORD``).
         """
         client = cls(os.environ.get("MOSAIC_BASE_URL", DEFAULT_BASE_URL), **kwargs)
-        username = os.environ.get("MOSAIC_USERNAME")
-        password = os.environ.get("MOSAIC_PASSWORD")
-        if username and password:
-            client.login(username, password)
+        client.login(os.environ.get("MOSAIC_USERNAME", DEMO_USERNAME),
+                     os.environ.get("MOSAIC_PASSWORD", DEMO_PASSWORD))
         return client
 
     # ------------------------------------------------------------------ core

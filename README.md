@@ -7,8 +7,8 @@ generation system, evaluated on
 - **Endpoint**: `https://app-d40d64a2.proxy1.ainexus.ktcloud.com`
 - **OpenAPI spec**: [`openapi.yaml`](openapi.yaml) · interactive docs at
   [`/docs`](https://app-d40d64a2.proxy1.ainexus.ktcloud.com/docs)
-- **Access**: call `/api/mosaic/login` first; all `/api/mosaic/*` routes
-  require the session cookie. Credentials are issued to benchmark reviewers.
+- **Access**: username `demo` / password `ktmosaic` (call `/api/mosaic/login`
+  first; all `/api/mosaic/*` routes require the session cookie)
 
 The API exposes the **exact retrieval + answering pipeline used for the
 benchmark submission** against pre-built knowledge bases. No scoring endpoints
@@ -87,18 +87,18 @@ cosine similarity to the question.
 ## Quickstart (Python ≥ 3.8, zero dependencies)
 
 ```bash
-export MOSAIC_BASE_URL=https://app-d40d64a2.proxy1.ainexus.ktcloud.com
-export MOSAIC_USERNAME=demo
-export MOSAIC_PASSWORD=...
 cd python
 python examples/quickstart.py
 ```
+
+The examples use the public endpoint and demo account by default; set
+`MOSAIC_BASE_URL` / `MOSAIC_USERNAME` / `MOSAIC_PASSWORD` to override.
 
 ```python
 from mosaic_client import MosaicClient
 
 client = MosaicClient("https://app-d40d64a2.proxy1.ainexus.ktcloud.com")
-client.login("demo", "...")          # or: client = MosaicClient.from_env()
+client.login("demo", "ktmosaic")     # or: client = MosaicClient.from_env()
 
 result = client.answer(
     database="medical",

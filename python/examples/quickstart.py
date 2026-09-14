@@ -6,14 +6,11 @@ GraphRAG-Bench corpora:
     medical  - GraphRAG-Bench medical corpus
     novel    - GraphRAG-Bench novel corpus
 
-Run:
-    export MOSAIC_BASE_URL=https://<mosaic-api-host>
-    export MOSAIC_USERNAME=demo
-    export MOSAIC_PASSWORD=<password>
+Run (uses the public endpoint and demo account; override with
+MOSAIC_BASE_URL / MOSAIC_USERNAME / MOSAIC_PASSWORD):
     python quickstart.py
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -50,9 +47,6 @@ QUESTIONS = [
 
 
 def main() -> None:
-    if not (os.environ.get("MOSAIC_USERNAME") and os.environ.get("MOSAIC_PASSWORD")):
-        sys.exit("set MOSAIC_USERNAME and MOSAIC_PASSWORD (and MOSAIC_BASE_URL)")
-
     client = MosaicClient.from_env()
     print("endpoint:", client.base_url)
     print("service version:", client.version().get("version"))

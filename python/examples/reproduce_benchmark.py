@@ -14,12 +14,12 @@ documents (the passages the answer was grounded on), so retrieval-only or
 end-to-end metrics can be computed from the same output file. Runs are
 resume-safe: ids already present in ``--out`` without an error are skipped.
 
-Credentials come from MOSAIC_BASE_URL / MOSAIC_USERNAME / MOSAIC_PASSWORD.
+Uses the public endpoint and demo account by default; override with
+MOSAIC_BASE_URL / MOSAIC_USERNAME / MOSAIC_PASSWORD.
 """
 
 import argparse
 import json
-import os
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -105,9 +105,6 @@ def main() -> None:
     parser.add_argument("--concurrency", type=int, default=1,
                         help="parallel requests (keep low to respect rate limits)")
     args = parser.parse_args()
-
-    if not (os.environ.get("MOSAIC_USERNAME") and os.environ.get("MOSAIC_PASSWORD")):
-        sys.exit("set MOSAIC_USERNAME and MOSAIC_PASSWORD (and MOSAIC_BASE_URL)")
 
     questions = load_questions(args.questions, args.database, args.domain)
     client = MosaicClient.from_env()
