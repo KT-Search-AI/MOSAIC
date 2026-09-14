@@ -8,11 +8,18 @@ info:
     All `/api/mosaic/*` routes require the session cookie issued by
     `/api/mosaic/login`. Responses use the envelope
     `{"code": 0, "message": "ok", "payload": {...}}`; a non-zero `code`
-    indicates an application error.
-  version: 0.1.0
+    indicates an application error:
+
+    | code  | meaning |
+    |-------|---------|
+    | 40101 | bad credentials (login) |
+    | 40401 | unknown `database` |
+    | 50001 | answer generation failed (retry later) |
+
+    Interactive docs (Swagger UI) are served at `/docs`.
+  version: 0.1.1
 servers:
-  # TODO: replace with the real public endpoint once it is deployed.
-  - url: https://api.mosaic.example.com
+  - url: https://app-d40d64a2.proxy1.ainexus.ktcloud.com
     description: Public endpoint
 paths:
   /api/version:
@@ -28,6 +35,11 @@ paths:
                 type: object
                 properties:
                   version: {type: string, example: 0.1.0}
+                  databases:
+                    type: object
+                    description: Load state per knowledge base (`loading`, `ready`, `error`)
+                    additionalProperties: {type: string}
+                    example: {medical: ready, novel: ready}
   /api/mosaic/login:
     post:
       summary: Issue the API session cookie
@@ -87,7 +99,9 @@ paths:
         '422':
           description: Request validation error
         '429':
-          description: Rate limited (client retries with backoff)
+          description: Too many requests in flight (client retries with backoff)
+        '503':
+          description: Knowledge base still loading or unavailable (client retries with backoff)
 components:
   securitySchemes:
     sessionCookie:
@@ -128,7 +142,13 @@ components:
         top_k:
           type: integer
           minimum: 1
-          default: 10
+          deprecated: true
+          description: >-
+            Accepted for backward compatibility and ignored. Answers are always
+            grounded on the benchmark-submission setting: 15 source passages
+            reranked from the graph evidence (reported in `answering.top_k`).
+            Retrieval breadth and depth are chosen per question by the
+            query analyzer.
         query_id:
           type: [string, 'null']
           description: Optional caller-side id, echoed back in `answering.query_id`
@@ -136,10 +156,14 @@ components:
       type: object
       required: [uid, rank, score, content]
       properties:
-        uid: {type: string, description: Document / passage id in the source corpus}
+        uid:
+          type: string
+          description: >-
+            Passage id `<chunk_id>:<char_offset>` — a window of the source-corpus
+            chunk `chunk_id` starting at character `char_offset`
         rank: {type: integer, description: 1-based rank}
-        score: {type: number}
-        content: {type: string}
+        score: {type: number, description: Reranker cosine similarity to the question}
+        content: {type: string, description: Passage text exactly as shown to the answer model}
     AnswerPayload:
       type: object
       required: [answer, retrieval]
@@ -161,3 +185,4 @@ components:
             question_type: {type: string}
             query_id: {type: [string, 'null']}
             model: {type: string, description: LLM used for generation}
+            top_k: {type: integer, description: Number of passages used to ground the answer (always 15)}

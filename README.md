@@ -4,8 +4,9 @@ Public REST API access to **MOSAIC** — KT's graph-based retrieval-augmented
 generation system, evaluated on
 [GraphRAG-Bench](https://arxiv.org/abs/2506.05690) (medical / novel corpora).
 
-- **Endpoint**: `https://api.mosaic.example.com` <!-- TODO: real endpoint -->
-- **OpenAPI spec**: [`openapi.yaml`](openapi.yaml)
+- **Endpoint**: `https://app-d40d64a2.proxy1.ainexus.ktcloud.com`
+- **OpenAPI spec**: [`openapi.yaml`](openapi.yaml) · interactive docs at
+  [`/docs`](https://app-d40d64a2.proxy1.ainexus.ktcloud.com/docs)
 - **Access**: call `/api/mosaic/login` first; all `/api/mosaic/*` routes
   require the session cookie. Credentials are issued to benchmark reviewers.
 
@@ -25,12 +26,23 @@ GraphRAG-Bench scripts (separation of player and referee).
 
 | Endpoint | Method | Purpose |
 |---|---|---|
-| `/api/version` | GET | service version / health check (no auth) |
+| `/api/version` | GET | service version + knowledge-base load state (no auth) |
 | `/api/mosaic/login` | POST | exchange credentials for the session cookie |
 | `/api/mosaic/answer` | POST | retrieval-augmented question answering |
 
 All JSON responses (except `/api/version`) use the envelope
 `{"code": 0, "message": "ok", "payload": {...}}`; non-zero `code` is an error.
+
+| situation | response |
+|---|---|
+| success | HTTP 200, `code: 0` |
+| bad credentials | HTTP 200, `code: 40101` |
+| unknown `database` | HTTP 200, `code: 40401` |
+| answer generation failed | HTTP 200, `code: 50001` (retry later) |
+| missing / expired session | HTTP 401 (the client re-logs in once) |
+| invalid request | HTTP 422 |
+| too many requests in flight | HTTP 429 (the client retries with backoff) |
+| knowledge base loading | HTTP 503 (the client retries with backoff) |
 
 ### `answer` request
 
@@ -40,8 +52,14 @@ All JSON responses (except `/api/version`) use the envelope
 | `question` | str | natural-language question |
 | `domain` | str | `medical` / `novel` / `generic` (default `medical`) |
 | `question_type` | str | `Fact Retrieval` / `Complex Reasoning` / `Contextual Summarize` / `Creative Generation` |
-| `top_k` | int | number of retrieved documents (default 10) |
+| `top_k` | int, optional | **deprecated, ignored** — see below |
 | `query_id` | str, optional | caller-side id, echoed back |
+
+Every answer is produced with the benchmark-submission configuration.
+Retrieval breadth and depth are chosen per question by MOSAIC's query analyzer,
+and the answer is grounded on **15 source passages** reranked from the graph
+evidence. `top_k` is accepted only for backward compatibility; the value
+actually used is reported in `answering.top_k`.
 
 ### `answer` response payload
 
@@ -51,22 +69,28 @@ All JSON responses (except `/api/version`) use the envelope
   "retrieval": {
     "backend": "mosaic",
     "documents": [
-      {"uid": "document id", "rank": 1, "score": 0.83, "content": "..."}
+      {"uid": "chunk-9b42…:800", "rank": 1, "score": 0.83, "content": "..."}
     ]
   },
   "answering": {
     "domain": "medical",
     "question_type": "Fact Retrieval",
     "query_id": null,
-    "model": "..."
+    "model": "gpt-4o-mini",
+    "top_k": 15
   }
 }
 ```
 
+`documents` are exactly the passages shown to the answer model, in rank order.
+`uid` is `<chunk_id>:<char_offset>`: a window of the source-corpus chunk
+`chunk_id` starting at character `char_offset`. `score` is the reranker's
+cosine similarity to the question.
+
 ## Quickstart (Python ≥ 3.8, zero dependencies)
 
 ```bash
-export MOSAIC_BASE_URL=https://api.mosaic.example.com
+export MOSAIC_BASE_URL=https://app-d40d64a2.proxy1.ainexus.ktcloud.com
 export MOSAIC_USERNAME=demo
 export MOSAIC_PASSWORD=...
 cd python
@@ -76,7 +100,7 @@ python examples/quickstart.py
 ```python
 from mosaic_client import MosaicClient
 
-client = MosaicClient("https://api.mosaic.example.com")
+client = MosaicClient("https://app-d40d64a2.proxy1.ainexus.ktcloud.com")
 client.login("demo", "...")          # or: client = MosaicClient.from_env()
 
 result = client.answer(
@@ -84,7 +108,6 @@ result = client.answer(
     question="What is the most common type of skin cancer?",
     domain="medical",
     question_type="Fact Retrieval",
-    top_k=10,
 )
 print(result["answer"])
 print(result["retrieval"]["documents"][0]["uid"])
@@ -94,6 +117,11 @@ The client keeps the session cookie, re-authenticates once on HTTP 401, and
 retries transient failures (429 / 502 / 503 / 504 / network errors) with
 exponential backoff. Errors raise `MosaicError` (with `.status` for HTTP
 errors and `.code` for API envelope errors).
+
+If Python reports `CERTIFICATE_VERIFY_FAILED` (common with the python.org
+installer on macOS), run `Install Certificates.command` from your Python
+folder, or point Python at the certifi bundle:
+`export SSL_CERT_FILE=$(python3 -m certifi)`.
 
 ## Reproduce a benchmark run
 

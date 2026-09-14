@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # MOSAIC API - curl examples
-#   MOSAIC_BASE_URL=https://<mosaic-api-host> MOSAIC_USERNAME=demo MOSAIC_PASSWORD=... ./examples.sh
+#   MOSAIC_BASE_URL=https://app-d40d64a2.proxy1.ainexus.ktcloud.com MOSAIC_USERNAME=demo MOSAIC_PASSWORD=... ./examples.sh
 set -euo pipefail
 
 BASE="${MOSAIC_BASE_URL:?set MOSAIC_BASE_URL}"
@@ -24,8 +24,7 @@ curl -s -b "$JAR" -X POST "$BASE/api/mosaic/answer" \
     "database": "medical",
     "question": "What is the most common type of skin cancer?",
     "domain": "medical",
-    "question_type": "Fact Retrieval",
-    "top_k": 10
+    "question_type": "Fact Retrieval"
   }' | head -c 1200; echo
 
 echo "== 3. ask against the pre-built novel knowledge base =="
@@ -35,6 +34,5 @@ curl -s -b "$JAR" -X POST "$BASE/api/mosaic/answer" \
     "database": "novel",
     "question": "Summarize the relationship between King Arthur and Launcelot.",
     "domain": "novel",
-    "question_type": "Contextual Summarize",
-    "top_k": 10
+    "question_type": "Contextual Summarize"
   }' | head -c 1200; echo

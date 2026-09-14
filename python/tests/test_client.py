@@ -61,7 +61,7 @@ class MockHandler(BaseHTTPRequestHandler):
                 return self._send(200, {"code": 40401, "message": "unknown database"})
             docs = [
                 {"uid": f"doc-{i}", "rank": i, "score": 1.0 / i, "content": "..."}
-                for i in range(1, body["top_k"] + 1)
+                for i in range(1, body.get("top_k", 15) + 1)
             ]
             return self._send(200, {"code": 0, "message": "ok", "payload": {
                 "answer": "Basal cell carcinoma.",
@@ -97,6 +97,11 @@ class MosaicClientTest(unittest.TestCase):
         self.assertEqual(result["answer"], "Basal cell carcinoma.")
         self.assertEqual([d["rank"] for d in result["retrieval"]["documents"]], [1, 2, 3])
         self.assertEqual(result["answering"]["query_id"], "q-1")
+
+    def test_top_k_is_not_sent_by_default(self):
+        self.client.login("demo", "pw")
+        result = self.client.answer("medical", "q?")
+        self.assertEqual(len(result["retrieval"]["documents"]), 15)
 
     def test_bad_login(self):
         with self.assertRaises(MosaicError) as ctx:

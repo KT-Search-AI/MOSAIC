@@ -66,7 +66,6 @@ def main() -> None:
             item["question"],
             domain=item["domain"],
             question_type=item["question_type"],
-            top_k=10,
         )
         print("A:", result["answer"])
         documents = result["retrieval"]["documents"]

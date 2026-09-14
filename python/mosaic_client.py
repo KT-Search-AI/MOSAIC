@@ -39,10 +39,9 @@ __all__ = [
     "DEFAULT_BASE_URL",
 ]
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
-# TODO: replace with the real public endpoint once it is deployed.
-DEFAULT_BASE_URL = "https://api.mosaic.example.com"
+DEFAULT_BASE_URL = "https://app-d40d64a2.proxy1.ainexus.ktcloud.com"
 
 API_PREFIX = "/api/mosaic"
 
@@ -82,7 +81,7 @@ class MosaicClient:
     """Thin REST client with automatic cookie-session handling.
 
     Args:
-        base_url: API root, e.g. ``https://api.mosaic.example.com``.
+        base_url: API root, e.g. ``https://app-d40d64a2.proxy1.ainexus.ktcloud.com``.
         timeout: per-request timeout in seconds (answer generation can be slow).
         max_retries: retries for transient failures (429/502/503/504, network
             errors). Uses exponential backoff starting at ``retry_backoff``.
@@ -207,7 +206,7 @@ class MosaicClient:
         *,
         domain: str = "medical",
         question_type: str = "Fact Retrieval",
-        top_k: int = 10,
+        top_k: Optional[int] = None,
         query_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Ask a question against a knowledge base.
@@ -219,7 +218,9 @@ class MosaicClient:
             domain: ``medical`` | ``novel`` | ``generic``.
             question_type: one of ``Fact Retrieval``, ``Complex Reasoning``,
                 ``Contextual Summarize``, ``Creative Generation``.
-            top_k: number of retrieved documents to ground the answer.
+            top_k: deprecated and ignored by the server, which always grounds
+                the answer on the benchmark-submission setting (15 reranked
+                passages). Omitted from the request unless given.
             query_id: optional caller-side id, echoed back for traceability.
 
         Returns:
@@ -233,7 +234,7 @@ class MosaicClient:
             raise ValueError(
                 f"question_type must be one of {QUESTION_TYPES}, got {question_type!r}"
             )
-        if top_k < 1:
+        if top_k is not None and top_k < 1:
             raise ValueError(f"top_k must be >= 1, got {top_k}")
 
         payload: Dict[str, Any] = {
@@ -241,8 +242,9 @@ class MosaicClient:
             "question": question,
             "domain": domain,
             "question_type": question_type,
-            "top_k": top_k,
         }
+        if top_k is not None:
+            payload["top_k"] = top_k
         if query_id is not None:
             payload["query_id"] = query_id
         return self._authed("POST", f"{API_PREFIX}/answer", payload)

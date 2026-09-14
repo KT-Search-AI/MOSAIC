@@ -9,10 +9,10 @@ Two modes:
      (Datasets/Questions/medical_questions.json or novel_questions.json):
          python reproduce_benchmark.py medical_questions.json --out results.jsonl
 
-Each answer call returns both the generated answer and the top-k retrieved
-documents, so retrieval-only or end-to-end metrics can be computed from the
-same output file. Runs are resume-safe: ids already present in ``--out``
-without an error are skipped.
+Each answer call returns both the generated answer and the retrieved
+documents (the passages the answer was grounded on), so retrieval-only or
+end-to-end metrics can be computed from the same output file. Runs are
+resume-safe: ids already present in ``--out`` without an error are skipped.
 
 Credentials come from MOSAIC_BASE_URL / MOSAIC_USERNAME / MOSAIC_PASSWORD.
 """
@@ -68,7 +68,7 @@ def load_done(out_path: Path) -> set:
     return done
 
 
-def run_one(client: MosaicClient, item: dict, top_k: int) -> dict:
+def run_one(client: MosaicClient, item: dict) -> dict:
     started = time.time()
     try:
         result = client.answer(
@@ -76,7 +76,6 @@ def run_one(client: MosaicClient, item: dict, top_k: int) -> dict:
             item["question"],
             domain=item["domain"],
             question_type=item.get("question_type", "Fact Retrieval"),
-            top_k=top_k,
             query_id=item["id"],
         )
         return {
@@ -103,7 +102,6 @@ def main() -> None:
                         help="knowledge base (default: inferred from file name)")
     parser.add_argument("--domain", default=None,
                         help="medical | novel | generic (default: follows database)")
-    parser.add_argument("--top-k", type=int, default=10)
     parser.add_argument("--concurrency", type=int, default=1,
                         help="parallel requests (keep low to respect rate limits)")
     args = parser.parse_args()
@@ -122,7 +120,7 @@ def main() -> None:
     failures = 0
     with out_path.open("a", encoding="utf-8") as out, \
             ThreadPoolExecutor(max_workers=max(1, args.concurrency)) as pool:
-        futures = [pool.submit(run_one, client, item, args.top_k) for item in remaining]
+        futures = [pool.submit(run_one, client, item) for item in remaining]
         for index, future in enumerate(as_completed(futures), start=1):
             record = future.result()
             out.write(json.dumps(record, ensure_ascii=False) + "\n")
