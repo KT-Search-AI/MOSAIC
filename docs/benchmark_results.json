@@ -1,0 +1,75 @@
+{
+  "framework": "KT-MOSAIC",
+  "benchmark": "GraphRAG-Bench",
+  "evaluation_setup": {
+    "datasets": [
+      "medical",
+      "novel"
+    ],
+    "answer_model": "gpt-4o-mini",
+    "embedding_model": "BAAI/bge-large-en-v1.5",
+    "reranker": "BAAI/bge-large-en-v1.5 bi-encoder",
+    "rerank_unit": "sliding source window",
+    "window_chars": 1600,
+    "window_stride": 800,
+    "top_k": 15,
+    "prompt_style": "concise",
+    "evaluation_code": "GraphRAG-Bench generation evaluation scripts",
+    "score_source": "internal generation-evaluation run",
+    "submission_context_source": "source passages/windows injected into the generation prompt"
+  },
+  "generation_eval": {
+    "medical": {
+      "overall": {
+        "answer_correctness": 0.7666
+      },
+      "Fact Retrieval": {
+        "num_questions": 1098,
+        "answer_correctness": 0.7586
+      },
+      "Complex Reasoning": {
+        "num_questions": 509,
+        "answer_correctness": 0.7657
+      },
+      "Contextual Summarize": {
+        "num_questions": 289,
+        "answer_correctness": 0.8546
+      },
+      "Creative Generation": {
+        "num_questions": 166,
+        "answer_correctness": 0.6697
+      }
+    },
+    "novel": {
+      "overall": {
+        "answer_correctness": 0.6433
+      },
+      "Fact Retrieval": {
+        "num_questions": 971,
+        "answer_correctness": 0.6543
+      },
+      "Complex Reasoning": {
+        "num_questions": 610,
+        "answer_correctness": 0.5757
+      },
+      "Contextual Summarize": {
+        "num_questions": 362,
+        "answer_correctness": 0.742
+      },
+      "Creative Generation": {
+        "num_questions": 67,
+        "answer_correctness": 0.5664
+      }
+    }
+  },
+  "output_files": {
+    "medical": {
+      "generation_input": "runs/medical/gen/external_eval_inputs/generation_input_paper_medical.json",
+      "generation_run": "runs/medical/gen/medical_retriever_paper_medical.json"
+    },
+    "novel": {
+      "generation_input": "runs/novel/gen/external_eval_inputs/generation_input_paper_novel.json",
+      "generation_run": "runs/novel/gen/novel_retriever_paper_novel.json"
+    }
+  }
+}
