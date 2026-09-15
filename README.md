@@ -32,6 +32,19 @@ correctness (Fact Retrieval, Complex Reasoning), answer correctness and
 coverage (Contextual Summarize), and answer correctness, coverage and
 faithfulness (Creative Generation).
 
+## Benchmark results
+
+Answer correctness on the full GraphRAG-Bench question sets. Overall is the
+average over all questions of the subset (question-count weighted).
+
+| Dataset | Questions | **Overall** | Fact Retrieval | Complex Reasoning | Contextual Summarize | Creative Generation |
+|---|---:|---:|---:|---:|---:|---:|
+| Medical | 2,062 | **0.7666** | 0.7586 | 0.7657 | 0.8546 | 0.6697 |
+| Novel | 2,010 | **0.6433** | 0.6543 | 0.5757 | 0.7420 | 0.5664 |
+
+Full results: [`docs/benchmark_results.json`](docs/benchmark_results.json) ·
+project overview: [`docs/README.md`](docs/README.md)
+
 ## Pre-built knowledge bases
 
 | `database` | corpus |
