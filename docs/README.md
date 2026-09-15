@@ -49,5 +49,5 @@ The numbers below are from an internal generation-evaluation run.
 
 | Dataset | **Overall** | Fact Retrieval | Complex Reasoning | Contextual Summarize | Creative Generation |
 |---|---:|---:|---:|---:|---:|
-| Medical | **0.7666** | 0.7586 | 0.7657 | 0.8546 | 0.6697 |
-| Novel | **0.6433** | 0.6543 | 0.5757 | 0.7420 | 0.5664 |
+| Medical | **0.7680** | 0.7586 | 0.7657 | 0.8546 | 0.6865 |
+| Novel | **0.6428** | 0.6543 | 0.5757 | 0.7420 | 0.5518 |

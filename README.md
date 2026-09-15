@@ -39,8 +39,8 @@ average over all questions of the subset (question-count weighted).
 
 | Dataset | Questions | **Overall** | Fact Retrieval | Complex Reasoning | Contextual Summarize | Creative Generation |
 |---|---:|---:|---:|---:|---:|---:|
-| Medical | 2,062 | **0.7666** | 0.7586 | 0.7657 | 0.8546 | 0.6697 |
-| Novel | 2,010 | **0.6433** | 0.6543 | 0.5757 | 0.7420 | 0.5664 |
+| Medical | 2,062 | **0.7680** | 0.7586 | 0.7657 | 0.8546 | 0.6865 |
+| Novel | 2,010 | **0.6428** | 0.6543 | 0.5757 | 0.7420 | 0.5518 |
 
 Full results: [`docs/benchmark_results.json`](docs/benchmark_results.json) ·
 project overview: [`docs/README.md`](docs/README.md)
