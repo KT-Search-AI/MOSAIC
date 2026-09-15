@@ -73,7 +73,7 @@ raw generation run and the external-evaluation input JSON.
 ## Benchmark Results
 
 The full result JSON is available at
-[`docs/benchmark_results.json`](docs/benchmark_results.json).
+[`benchmark_results.json`](benchmark_results.json).
 
 The numbers below are from an internal generation-evaluation run.
 
