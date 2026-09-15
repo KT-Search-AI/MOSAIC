@@ -1,7 +1,7 @@
 # KT-MOSAIC
 
-This repository contains a compact reproduction package for the Medical and
-Novel subsets of GraphRAG-Bench. KT-MOSAIC uses query-adaptive graph retrieval,
+This document gives an overview of KT-MOSAIC and its results on the Medical
+and Novel subsets of GraphRAG-Bench. KT-MOSAIC uses query-adaptive graph retrieval,
 maps selected graph evidence back to source passages, reranks source windows
 with BGE, and generates final answers from the selected passages.
 
