@@ -28,36 +28,6 @@ actually injected into the generation prompt. This keeps generation and
 evaluation cleanly separated while preserving the exact context used by the
 answer model.
 
-## Setup
-
-```bash
-python -m pip install -r requirements.txt
-export OPENAI_API_KEY=...
-```
-
-Required assets:
-
-```text
-data/medical_questions.json
-data/novel_questions.json
-data/rag_storage_medical.zip
-data/rag_storage_novel.zip
-models/BAAI_bge-large-en-v1.5
-```
-
-For the reported run, the embedding endpoint was served locally at
-`http://127.0.0.1:8000/v1` with `bge-large-en-v1.5`.
-
-## Run
-
-```bash
-bash run_generation.sh medical
-bash run_generation.sh novel
-```
-
-The script reuses cached retrieval results when available and writes both the
-raw generation run and the external-evaluation input JSON.
-
 ## Experimental Settings
 
 | Setting | Value |
@@ -81,16 +51,3 @@ The numbers below are from an internal generation-evaluation run.
 |---|---:|---:|---:|---:|---:|
 | Medical | **0.7666** | 0.7586 | 0.7657 | 0.8546 | 0.6697 |
 | Novel | **0.6433** | 0.6543 | 0.5757 | 0.7420 | 0.5664 |
-
-## Code Structure
-
-```text
-run_generation.sh              # medical/novel generation entry point
-run_pipeline.py                # retrieval entry point
-pipeline_runtime.py            # shared runtime and API clients
-scripts/run_retrieval.sh       # retrieval wrapper
-scripts/run_generation.py      # source-window generation and JSON export
-retriever/                     # graph retrieval and passage-window utilities
-evaluation/                    # GraphRAG-Bench evaluation helpers
-docs/benchmark_results.json    # reported benchmark results
-```
