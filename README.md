@@ -1,4 +1,4 @@
-# MOSAIC Public SDK
+# KT-MOSAIC Public SDK
 
 Public REST API access to **MOSAIC** — KT's graph-based retrieval-augmented
 generation system, evaluated on
